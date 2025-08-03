@@ -1,10 +1,25 @@
 
+import { db } from '../db';
+import { chatParticipantsTable } from '../db/schema';
 import { type MarkMessagesReadInput } from '../schema';
+import { and, eq } from 'drizzle-orm';
 
 export async function markMessagesRead(input: MarkMessagesReadInput): Promise<void> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating the last_read_at timestamp for a user in a chat.
-    // Should update the chat_participants table to mark all messages as read up to the current time.
-    // This helps calculate unread message counts in the getUserChats handler.
-    return Promise.resolve();
+  try {
+    // Update the last_read_at timestamp for the user in the specified chat
+    await db.update(chatParticipantsTable)
+      .set({
+        last_read_at: new Date()
+      })
+      .where(
+        and(
+          eq(chatParticipantsTable.chat_id, input.chat_id),
+          eq(chatParticipantsTable.user_id, input.user_id)
+        )
+      )
+      .execute();
+  } catch (error) {
+    console.error('Mark messages read failed:', error);
+    throw error;
+  }
 }
